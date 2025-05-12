@@ -1,12 +1,30 @@
+/******************************************************************
+ * ╔════════════════════════════════════════════════════════════╗
+ * ║     << C.H.A.O.S.V3 - CODEX >> DIRECT MESSAGES INTERFACE    ║
+ * ╠════════════════════════════════════════════════════════════╣
+ * ║ One-on-one messaging functionality with real-time updates    ║
+ * ║ Includes typing indicators and message delivery status      ║
+ * ╚════════════════════════════════════════════════════════════╝
+ ******************************************************************/
+
 "use client"
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Send, Paperclip, Smile, Wand2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ChaosLogo } from "@/components/chaos-logo"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
+import { useAuth } from "./auth-provider"
+import { useMessaging } from "./messaging-provider"
+import { Alert, AlertDescription } from "./ui/alert"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+// CIPHER-X: Import socket types and utilities
+import { MessageData, ConnectionState } from "@/lib/socket"
+import { ChaosLogo } from "./chaos-logo"
 
 interface Message {
   id: number
@@ -24,10 +42,52 @@ interface Contact {
   avatar: string
 }
 
+/******************************************************************
+ * OMEGA-MATRIX CONVERSION ALGORITHM
+ * Transforms raw socket message data into standardized UI format
+ * Ensures consistent display regardless of message source
+ ******************************************************************/
+const convertMessageToUiFormat = (msg: MessageData, currentUserId: string): Message => {
+  return {
+    id: parseInt(msg.id as string) || Math.floor(Math.random() * 10000),
+    sender: msg.sender?.displayName || msg.sender?.username || 'Unknown',
+    content: msg.content || '',
+    timestamp: new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    isCurrentUser: msg.sender?.id === currentUserId
+  };
+};
+
 export function DirectMessages() {
+  // OMEGA-MATRIX: Authentication & Messaging Systems
+  const { user } = useAuth();
+  const { 
+    messages: socketMessages, 
+    sendMessage, 
+    connectionState, 
+    error: messagingError, 
+    typingUsers, 
+    sendTypingIndicator, 
+    activeChannel,
+    setActiveChannel,
+    joinChannel
+  } = useMessaging();
+  
+  // CIPHER-X: Convert socket messages to UI format
+  const messages = socketMessages && Array.isArray(socketMessages) 
+    ? socketMessages.map(msg => convertMessageToUiFormat(msg, user?.id || ''))
+    : [];
+  
+  // CIPHER-X: UI State Management
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [messageInput, setMessageInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [typing, setTyping] = useState(false)
+  const messageEndRef = useRef<HTMLDivElement>(null)
+  
+  // CIPHER-X: Message delivery tracking
+  const [sending, setSending] = useState(false)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const contacts: Contact[] = [
     {
@@ -60,7 +120,8 @@ export function DirectMessages() {
     },
   ]
 
-  const messages: Message[] = [
+  // CIPHER-X: Mock data for demonstration when no real messages available
+  const mockMessages: Message[] = [
     {
       id: 1,
       sender: "Jessica82",
@@ -113,10 +174,46 @@ export function DirectMessages() {
     }
   }
 
-  const handleSendMessage = () => {
-    if (messageInput.trim() === "") return
-    // In a real app, we would add the message to the messages array
-    setMessageInput("")
+  /******************************************************************
+ * CIPHER-X MESSAGE TRANSMITTER
+ * Processes, validates and dispatches user messages
+ * Handles delivery confirmation and error states
+ ******************************************************************/
+  const handleSendMessage = async () => {
+    if (messageInput.trim() && (selectedContact || activeChannel)) {
+      try {
+        // OMEGA-MATRIX: Visual feedback during message sending
+        setSending(true);
+        
+        /******************************************************************
+         * OMEGA-MATRIX TRANSMISSION PROTOCOL
+         * Structured message format with required metadata
+         * Ensures consistent message handling across system
+         ******************************************************************/
+        await sendMessage({
+          content: messageInput,
+          channel: activeChannel || `user_${selectedContact?.id}`,
+          sender: {
+            id: user?.id || 'unknown',
+            username: user?.username || 'user',
+            displayName: user?.displayName || user?.username || 'User'
+          }
+        });
+        
+        // CIPHER-X: Reset input and typing state
+        setMessageInput("");
+        setTyping(false);
+        sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, false);
+        
+        // CIPHER-X: Scroll to bottom after sending
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        setError('Failed to send message. Please try again.');
+        console.error('Message send error:', err);
+      } finally {
+        setSending(false);
+      }
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,7 +303,8 @@ export function DirectMessages() {
             </div>
 
             <div id="chat-window" className="flex-1 overflow-y-auto p-3 bg-[#FFFFFF]">
-              {messages.map((message) => (
+              {/* OMEGA-MATRIX: Real-time message display with fallback to mock data */}
+              {(messages && messages.length > 0 ? messages : mockMessages).map((message: Message) => (
                 <div key={message.id} className={`mb-3 ${message.isCurrentUser ? "text-right" : "text-left"}`}>
                   <div
                     className={`inline-block max-w-[80%] p-2 rounded-md ${
@@ -232,19 +330,39 @@ export function DirectMessages() {
                   <Smile className="h-4 w-4" />
                 </Button>
                 <Input
-                  value={messageInput}
-                  onChange={handleInputChange}
+                  className="flex-1 border-slate-200 focus:ring-1 focus:ring-slate-300 mr-2"
                   placeholder="Type a message..."
-                  className="flex-1 h-8 bg-white border-[#D4D0C8]"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSendMessage()
+                  value={messageInput}
+                  onChange={(e) => {
+                    setMessageInput(e.target.value);
+                    // CIPHER-X: Typing indicator management
+                    if (!typing && e.target.value.length > 0) {
+                      setTyping(true);
+                      sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, true);
+                    } else if (typing && e.target.value.length === 0) {
+                      setTyping(false);
+                      sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, false);
                     }
                   }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 />
-                <Button onClick={handleSendMessage} className="ml-2 h-8 bg-[#316AC5] hover:bg-[#2A5BD7] text-white">
-                  <Send className="h-4 w-4" />
-                </Button>
+                <div className="flex space-x-1">
+                  <Button variant="ghost" size="icon" className="text-slate-500">
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-slate-500">
+                    <Smile className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="bg-[#0078D4] hover:bg-[#106EBE] text-white px-3 py-1 h-8"
+                    onClick={handleSendMessage}
+                    disabled={!messageInput.trim() || sending || connectionState !== ConnectionState.CONNECTED}
+                  >
+                    <Send className="h-3 w-3 mr-1" />
+                    {sending ? "Sending..." : "Send"}
+                  </Button>
+                </div>
               </div>
             </div>
           </>
