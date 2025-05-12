@@ -13,7 +13,7 @@ import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
-import { UserStatus } from '@shared/types';
+import { UserStatus } from '../../../shared/types';
 
 /**
  * CIPHER-X: Retrieve a user profile by ID
@@ -646,3 +646,4 @@ export default {
   getFriends,
   getPendingFriendRequests
 };
+

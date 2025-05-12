@@ -1,4 +1,11 @@
-# CHAOSV3 - A Modern MSN-Inspired Chat Platform
+# ╔════════════════════════════════════════════════════════════════════╗
+# ║                     << C.H.A.O.S.V3 - CODEX >>                     ║
+# ║                 QUANTUM COMMUNICATION PLATFORM                     ║
+# ╠════════════════════════════════════════════════════════════════════╣
+# ║  Modern MSN-inspired chat platform with advanced features          ║
+# ║  Last Updated: 2025-05-12                                          ║
+# ║  Author: CHAOSV3 Team                                              ║
+# ╚════════════════════════════════════════════════════════════════════╝
 
 CHAOSV3 is a modern chat platform heavily inspired by MSN Messenger's nostalgic UI/UX, enhanced with features to compete with platforms like Discord. It features real-time messaging, voice/video chat, user presence indicators, screen sharing, and group channels.
 
@@ -22,30 +29,69 @@ CHAOSV3 is a modern chat platform heavily inspired by MSN Messenger's nostalgic 
 - **Authentication**: JWT-based
 - **Styling**: TailwindCSS with custom MSN-inspired theme
 
+/******************************************************************
+ * CIPHER-X: QUANTUM IGNITION PROTOCOL
+ * One-click startup for the entire platform
+ * Streamlined development and deployment experience
+ ******************************************************************/
+
+## 🚀 One-Click Startup
+
+We've created a simplified startup process with a single command:
+
+**Windows:**
+```powershell
+.\start.ps1
+```
+
+**Linux/macOS:**
+```bash
+bash ./start.sh
+```
+
+This automatically:
+- Checks for required dependencies
+- Sets up environment configuration files
+- Starts the backend API server
+- Launches the frontend development server
+- Provides access URLs for all components
+
+## 🏗️ Project Organization
+
+```
+CHAOSV3/
+├── config/                    # Configuration files
+│   └── ollama.json            # AI integration settings
+│
+├── scripts/                   # Utility scripts
+│   ├── clean-build.ps1/sh     # Build cleanup scripts
+│   ├── docker-run.ps1/sh      # Docker deployment scripts
+│   └── initialize.ps1/sh      # Environment setup scripts
+│
+├── docs/                      # Documentation
+│   └── GUIDE.md               # Comprehensive user guide
+│
+├── FRONTEND/                  # Next.js frontend application
+├── backend/                   # Express.js backend API
+├── shared/                    # Shared type definitions
+│
+├── start.ps1                  # Windows unified startup
+└── start.sh                   # Linux unified startup
+```
+
 ## 🛠️ Deployment Options
 
 ### Docker Deployment
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/chaosv3.git
-cd chaosv3
-
-# Configure environment variables
-cp .env.example .env
-# Edit .env file with your settings
-
 # Start with Docker Compose
 docker-compose up -d
 ```
 
 ### Windows Executable
-Download the latest .exe from the releases page or build it yourself:
+Build the executable with:
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the executable
+cd FRONTEND
 npm run build:exe
 ```
 

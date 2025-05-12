@@ -11,7 +11,7 @@
 
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { UserStatus } from '@shared/types';
+import { UserStatus } from '../../../shared/types';
 
 /******************************************************************
  * CIPHER-X: USER QUANTUM IDENTITY SCHEMA
@@ -216,3 +216,4 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
 
 // Create and export the User model
 export default mongoose.model<IUser>('User', UserSchema);
+
