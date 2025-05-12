@@ -13,6 +13,7 @@ import { ChaosLogo } from "./chaos-logo"
 import { CommunicationHubs } from "./communication-hubs"
 import { ServerList } from "./server-list"
 import { ServerNavigation } from "./server-navigation"
+import Link from "next/link"
 
 type View =
   | "direct-messages"
@@ -101,6 +102,16 @@ export default function Dashboard() {
     <div
       className={`flex h-screen bg-[#ECE9D8] overflow-hidden ${isMaximized ? "w-screen" : "w-[95vw] h-[95vh] mx-auto my-auto mt-6 rounded-md shadow-xl"}`}
     >
+      {/* CIPHER-X: System Diagnostics Button */}
+      <Link 
+        href="/test" 
+        className="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 px-4 rounded-md shadow-lg flex items-center hover:from-blue-700 hover:to-blue-900 transition-all"
+      >
+        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Connection Test
+      </Link>
       <WindowsXPSidebar onViewChange={handleViewChange} currentView={currentView} />
 
       <div className="flex flex-col flex-1 overflow-hidden">

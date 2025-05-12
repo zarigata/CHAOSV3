@@ -16,6 +16,7 @@ import userRoutes from './userRoutes';
 import messageRoutes from './messageRoutes';
 import channelRoutes from './channelRoutes';
 import serverRoutes from './serverRoutes';
+import testRoutes from './testRoutes';
 
 /**
  * CIPHER-X: API Routes Configuration
@@ -35,6 +36,7 @@ export const configureRoutes = (app: Application) => {
   app.use(`${apiPrefix}/messages`, messageRoutes);
   app.use(`${apiPrefix}/channels`, channelRoutes);
   app.use(`${apiPrefix}/servers`, serverRoutes);
+  app.use(`${apiPrefix}`, testRoutes); // Test routes available at /api/v1/test
   
   // Health check endpoint
   app.get('/health', (req, res) => {
