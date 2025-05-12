@@ -4,7 +4,7 @@
  * ║                     API ROUTES MANAGER [NEXUS-GATEWAY-501]                         ║
  * ╠════════════════════════════════════════════════════════════════════════════════════╣
  * ║  Central configuration for all API routes and endpoints                            ║
- * ║  Last Updated: 2025-05-11                                                          ║
+ * ║  Last Updated: 2025-05-12                                                          ║
  * ║  Author: CHAOSV3 Team                                                              ║
  * ╚════════════════════════════════════════════════════════════════════════════════════╝
  */
@@ -12,11 +12,10 @@
 import { Application } from 'express';
 import { httpLogger } from '../utils/logger';
 import authRoutes from './authRoutes';
-// Import other route modules as they're created
-// import userRoutes from './userRoutes';
-// import messageRoutes from './messageRoutes';
-// import serverRoutes from './serverRoutes';
-// import channelRoutes from './channelRoutes';
+import userRoutes from './userRoutes';
+import messageRoutes from './messageRoutes';
+import channelRoutes from './channelRoutes';
+import serverRoutes from './serverRoutes';
 
 /**
  * CIPHER-X: API Routes Configuration
@@ -32,12 +31,10 @@ export const configureRoutes = (app: Application) => {
   
   // Register routes with their respective prefixes
   app.use(`${apiPrefix}/auth`, authRoutes);
-  
-  // These will be uncommented as the routes are implemented
-  // app.use(`${apiPrefix}/users`, userRoutes);
-  // app.use(`${apiPrefix}/messages`, messageRoutes);
-  // app.use(`${apiPrefix}/servers`, serverRoutes);
-  // app.use(`${apiPrefix}/channels`, channelRoutes);
+  app.use(`${apiPrefix}/users`, userRoutes);
+  app.use(`${apiPrefix}/messages`, messageRoutes);
+  app.use(`${apiPrefix}/channels`, channelRoutes);
+  app.use(`${apiPrefix}/servers`, serverRoutes);
   
   // Health check endpoint
   app.get('/health', (req, res) => {
