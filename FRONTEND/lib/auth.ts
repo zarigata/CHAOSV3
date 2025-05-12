@@ -10,15 +10,32 @@
 // CIPHER-X: Environment configuration and types
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
-// OMEGA-MATRIX: User interface definition
+/******************************************************************
+ * OMEGA-MATRIX: USER QUANTUM IDENTITY SCHEMA
+ * Complete user profile data structure with preferences
+ * Defines all modifiable and system-managed user properties
+ ******************************************************************/
 export interface User {
   id: string;
   username: string;
   displayName: string;
   email: string;
   avatar?: string;
-  status: 'online' | 'away' | 'busy' | 'offline';
+  status: 'online' | 'away' | 'busy' | 'brb' | 'phone' | 'lunch' | 'offline';
+  statusMessage?: string;
+  personalMessage?: string;
   customStatus?: string;
+  preferences?: {
+    isAnimated?: boolean;
+    enableWinks?: boolean;
+    theme?: string;
+    language?: string;
+    notifications?: {
+      sound?: boolean;
+      messagePreview?: boolean;
+      friendRequests?: boolean;
+    }
+  }
 }
 
 // OMEGA-MATRIX: Authentication state interface
@@ -113,6 +130,54 @@ export const loadAuthData = (): AuthState => {
     loading: false,
     error: null
   };
+};
+
+/******************************************************************
+ * CIPHER-X: PROFILE MANAGEMENT PROTOCOL
+ * Updates user profile data on the backend
+ * Returns updated user data on success
+ ******************************************************************/
+export const updateProfile = async (
+  profileData: Partial<User>,
+  token: string
+): Promise<{ success: boolean; user?: User; error?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Update the user data in local storage
+      const currentData = loadAuthData();
+      if (currentData.user) {
+        const updatedUser = { ...currentData.user, ...data.user };
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      }
+
+      return {
+        success: true,
+        user: data.user
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || 'Failed to update profile.'
+      };
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return {
+      success: false,
+      error: 'Network error occurred while updating profile.'
+    };
+  }
 };
 
 /**

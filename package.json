@@ -1,0 +1,16 @@
+{
+  "name": "chaosv3",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:dev-backend\" \"npm:dev-frontend\" \"npm:seed\"",
+    "dev-backend": "npm run dev --prefix backend",
+    "dev-frontend": "npm run dev --prefix FRONTEND",
+    "seed": "npm run seed --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "chaosv3": "file:"
+  }
+}

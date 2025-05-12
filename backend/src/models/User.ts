@@ -11,9 +11,13 @@
 
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { UserStatus } from '../../../shared/types';
+import { UserStatus } from '@shared/types';
 
-// Interface for User document extending the base Document type
+/******************************************************************
+ * CIPHER-X: USER QUANTUM IDENTITY SCHEMA
+ * Complete user profile data structure with advanced preferences
+ * Defines all database fields for user document storage
+ ******************************************************************/
 export interface IUser extends Document {
   username: string;
   email: string;
@@ -21,11 +25,24 @@ export interface IUser extends Document {
   displayName: string;
   avatar?: string;
   status: UserStatus;
+  statusMessage?: string;
+  personalMessage?: string;
   customStatus?: string;
   bio?: string;
   friends: mongoose.Types.ObjectId[];
   pendingFriends: mongoose.Types.ObjectId[];
   blockedUsers: mongoose.Types.ObjectId[];
+  preferences?: {
+    isAnimated?: boolean;
+    enableWinks?: boolean;
+    theme?: string;
+    language?: string;
+    notifications?: {
+      sound?: boolean;
+      messagePreview?: boolean;
+      friendRequests?: boolean;
+    }
+  };
   settings: {
     theme: string;
     notifications: boolean;
@@ -76,13 +93,21 @@ const UserSchema = new Schema<IUser>({
     enum: Object.values(UserStatus),
     default: UserStatus.OFFLINE
   },
+  statusMessage: {
+    type: String,
+    maxlength: 100
+  },
+  personalMessage: {
+    type: String,
+    maxlength: 200
+  },
   customStatus: {
     type: String,
-    default: null
+    maxlength: 100
   },
   bio: {
     type: String,
-    default: null
+    maxlength: 500
   },
   friends: [{
     type: Schema.Types.ObjectId,
@@ -96,11 +121,42 @@ const UserSchema = new Schema<IUser>({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
+  preferences: {
+    isAnimated: {
+      type: Boolean,
+      default: true
+    },
+    enableWinks: {
+      type: Boolean,
+      default: true
+    },
+    theme: {
+      type: String,
+      default: 'classic'
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    notifications: {
+      sound: {
+        type: Boolean,
+        default: true
+      },
+      messagePreview: {
+        type: Boolean,
+        default: true
+      },
+      friendRequests: {
+        type: Boolean,
+        default: true
+      }
+    }
+  },
   settings: {
     theme: {
       type: String,
-      enum: ['default', 'dark', 'light', 'retro', 'classic-msn'],
-      default: 'classic-msn'
+      default: 'light'
     },
     notifications: {
       type: Boolean,
@@ -116,12 +172,12 @@ const UserSchema = new Schema<IUser>({
     },
     statusPrivacy: {
       type: String,
-      enum: ['public', 'friends-only', 'private'],
-      default: 'friends-only'
+      enum: ['public', 'friends', 'private'],
+      default: 'friends'
     },
     autoLogin: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   lastActive: {

@@ -137,10 +137,10 @@ install_backend_dependencies() {
 
 # CIPHER-X: Initialize frontend if it exists
 install_frontend_dependencies() {
-    if [ -d "frontend" ]; then
+    if [ -d "FRONTEND" ]; then
         show_info "Installing frontend dependencies..."
         
-        (cd frontend && npm install)
+        (cd FRONTEND && npm install)
         
         if [ $? -eq 0 ]; then
             mark_step "Frontend dependencies installed successfully"
@@ -186,6 +186,7 @@ if [ $result -eq 0 ]; then
     echo -e "${GREEN}${BOLD}  ╚════════════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  To start the backend server:  ${CYAN}cd backend && npm run dev${RESET}"
+    echo -e "  To start the frontend server: ${CYAN}cd FRONTEND && npm run dev${RESET}"
     echo -e "  MongoDB is running at:        ${CYAN}mongodb://localhost:27017/chaosv3${RESET}"
     echo ""
 else

@@ -19,7 +19,7 @@ import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
 import { io } from '../server';
-import { SocketEvent } from '../../../shared/types';
+import { SocketEvent } from '@shared/types';
 
 /**
  * CIPHER-X: Get messages from a specific channel

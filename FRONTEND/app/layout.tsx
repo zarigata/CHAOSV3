@@ -7,22 +7,12 @@
  * ╚════════════════════════════════════════════════════════════╝
  ******************************************************************/
 
-/******************************************************************
- * ╔════════════════════════════════════════════════════════════╗
- * ║      << C.H.A.O.S.V3 - CODEX >> APPLICATION LAYOUT         ║
- * ╠════════════════════════════════════════════════════════════╣
- * ║ Root layout configuration for the CHAOSV3 platform         ║
- * ║ Sets up global providers for auth, theming, and styling    ║
- * ╚════════════════════════════════════════════════════════════╝
- ******************************************************************/
-
 import type React from "react"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/components/auth-provider"
-import { ProtectedRoute } from "@/components/protected-route"
-import { MessagingProvider } from "@/components/messaging-provider"
+
+// OMEGA-MATRIX: Import client-side providers wrapper
+import { Providers } from "../components/providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -42,18 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {/* CIPHER-X: Nested providers with authentication and route protection */}
-        {/* CIPHER-X: Nested provider architecture - Auth > Messaging > Theme > Routes */}
-        <AuthProvider>
-          <MessagingProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-              {/* OMEGA-MATRIX: Protection layer for authenticated routes */}
-              <ProtectedRoute>
-                {children}
-              </ProtectedRoute>
-            </ThemeProvider>
-          </MessagingProvider>
-        </AuthProvider>
+        {/* CIPHER-X: Using a single Providers component to avoid client/server component confusion */}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

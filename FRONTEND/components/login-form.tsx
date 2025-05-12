@@ -9,7 +9,7 @@
 
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
 import { Button } from './ui/button'
@@ -99,11 +99,16 @@ export function LoginForm() {
     }
   }
   
-  // CIPHER-X: Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push('/')
-    return null
-  }
+  /******************************************************************
+   * CIPHER-X: AUTHENTICATION STATE MONITOR
+   * Handles redirect when authentication state changes
+   * Uses useEffect instead of direct router call during render
+   ******************************************************************/
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/')
+    }
+  }, [isAuthenticated, router])
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 flex items-center justify-center p-4">

@@ -13,7 +13,7 @@ import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
-import { UserStatus } from '../../../shared/types';
+import { UserStatus } from '@shared/types';
 
 /**
  * CIPHER-X: Retrieve a user profile by ID
@@ -83,27 +83,71 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-/**
- * CIPHER-X: Update the current user's profile
- * Allows editing of display name, bio, avatar and other basic profile info
- * 
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next function
- */
+/******************************************************************
+ * CIPHER-X: PROFILE MANAGEMENT PROTOCOL
+ * Updates user profile data with advanced MSN-style fields
+ * Handles preferences, statuses, and appearance settings
+ ******************************************************************/
 export const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user._id;
-    const { displayName, bio, avatar } = req.body;
+    const { 
+      displayName, 
+      bio, 
+      avatar, 
+      status, 
+      statusMessage, 
+      personalMessage, 
+      customStatus,
+      preferences 
+    } = req.body;
     
-    // Only allow specific fields to be updated
+    // Build update data object with all allowed fields
     const updateData: any = {};
     
+    // Basic profile fields
     if (displayName) updateData.displayName = displayName;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar !== undefined) updateData.avatar = avatar;
     
-    // Update the user profile
+    // Status fields
+    if (status !== undefined) {
+      const validStatuses = ['online', 'away', 'busy', 'brb', 'phone', 'lunch', 'offline'];
+      if (validStatuses.includes(status)) {
+        updateData.status = status;
+      } else {
+        throw new ApiError('Invalid status value', 400);
+      }
+    }
+    
+    // Status messages
+    if (statusMessage !== undefined) updateData.statusMessage = statusMessage;
+    if (personalMessage !== undefined) updateData.personalMessage = personalMessage;
+    if (customStatus !== undefined) updateData.customStatus = customStatus;
+    
+    // User preferences
+    if (preferences) {
+      // Use $set with dot notation for nested objects
+      if (preferences.isAnimated !== undefined) updateData['preferences.isAnimated'] = preferences.isAnimated;
+      if (preferences.enableWinks !== undefined) updateData['preferences.enableWinks'] = preferences.enableWinks;
+      if (preferences.theme !== undefined) updateData['preferences.theme'] = preferences.theme;
+      if (preferences.language !== undefined) updateData['preferences.language'] = preferences.language;
+      
+      // Handle nested notification preferences
+      if (preferences.notifications) {
+        if (preferences.notifications.sound !== undefined) {
+          updateData['preferences.notifications.sound'] = preferences.notifications.sound;
+        }
+        if (preferences.notifications.messagePreview !== undefined) {
+          updateData['preferences.notifications.messagePreview'] = preferences.notifications.messagePreview;
+        }
+        if (preferences.notifications.friendRequests !== undefined) {
+          updateData['preferences.notifications.friendRequests'] = preferences.notifications.friendRequests;
+        }
+      }
+    }
+    
+    // Update the user profile with the new data
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updateData },
@@ -114,13 +158,17 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
       throw new ApiError('User not found', 404);
     }
     
-    // Return the updated profile
+    // Log successful profile update
+    logger.info(`User ${userId} updated their profile`);
+    
+    // Return the updated profile with success status
     res.status(200).json({
       success: true,
-      data: updatedUser,
+      user: updatedUser,
       timestamp: new Date()
     });
-  } catch (error) {
+  } catch (error: any) {
+    logger.error(`Profile update failed: ${error.message || 'Unknown error'}`);
     next(error);
   }
 };

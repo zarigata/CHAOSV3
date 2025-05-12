@@ -18,16 +18,22 @@ import {
   register as registerApi,
   logout as logoutApi,
   getCurrentUser,
-  refreshAuthToken
+  refreshAuthToken,
+  updateProfile as updateProfileApi
 } from '@/lib/auth'
 
-// CIPHER-X: Auth context interface with action handlers
+/******************************************************************
+ * CIPHER-X: QUANTUM AUTHENTICATION INTERFACE
+ * Defines all available authentication operations
+ * Provides strong typing for auth context consumers
+ ******************************************************************/
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   register: (username: string, email: string, password: string, displayName?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   setError: (error: string | null) => void;
+  updateProfile: (profileData: Partial<User>) => Promise<boolean>;
 }
 
 // OMEGA-MATRIX: Create authentication context
@@ -151,18 +157,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authState.token])
   
+  /******************************************************************
+   * OMEGA-MATRIX: PROFILE UPDATE PROTOCOL
+   * Updates user profile data via authenticated API
+   * Synchronizes local user state with backend
+   ******************************************************************/
+  const updateProfile = useCallback(async (profileData: Partial<User>): Promise<boolean> => {
+    if (!authState.token) return false
+    
+    try {
+      // Clear any previous errors
+      setAuthState(prev => ({
+        ...prev,
+        error: null
+      }))
+      
+      // Call the API to update the profile
+      const result = await updateProfileApi(profileData, authState.token)
+      
+      if (result.success) {
+        // Update the local state with the new user data
+        setAuthState(prev => ({
+          ...prev,
+          user: {
+            ...prev.user!,
+            ...result.user
+          }
+        }))
+        return true
+      } else {
+        setAuthState(prev => ({
+          ...prev,
+          error: result.error || 'Failed to update profile'
+        }))
+        return false
+      }
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        error: 'Network error occurred while updating profile'
+      }))
+      return false
+    }
+  }, [authState.token])
+  
+  // CIPHER-X: Context provider value with all state and actions
+  const value: AuthContextType = {
+    ...authState,
+    login,
+    register,
+    logout,
+    updateUser,
+    setError,
+    updateProfile
+  }
+
   // CIPHER-X: Provide authentication context to child components
   return (
-    <AuthContext.Provider
-      value={{
-        ...authState,
-        login,
-        register,
-        logout,
-        updateUser,
-        setError
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

@@ -23,7 +23,16 @@ import { useMessaging } from "./messaging-provider"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 // CIPHER-X: Import socket types and utilities
-import { MessageData, ConnectionState } from "@/lib/socket"
+import { 
+  connectSocket, 
+  disconnectSocket, 
+  sendMessage, 
+  joinChannel, 
+  leaveChannel,
+  subscribeToEvent,
+  MessageData,
+  ConnectionState
+} from "@/lib/socket"
 import { ChaosLogo } from "./chaos-logo"
 
 interface Message {
@@ -59,7 +68,7 @@ const convertMessageToUiFormat = (msg: MessageData, currentUserId: string): Mess
 
 export function DirectMessages() {
   // OMEGA-MATRIX: Authentication & Messaging Systems
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { 
     messages: socketMessages, 
     sendMessage, 
@@ -89,75 +98,162 @@ export function DirectMessages() {
   const [sending, setSending] = useState(false)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const contacts: Contact[] = [
-    {
-      id: 1,
-      name: "Jessica82",
-      status: "online",
-      lastMessage: "Hey, how are you?",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: 2,
-      name: "CoolDude99",
-      status: "away",
-      lastMessage: "Check out this cool website",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: 3,
-      name: "GamerGirl2000",
-      status: "busy",
-      lastMessage: "I'm playing that new game",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: 4,
-      name: "TechWizard",
-      status: "offline",
-      lastMessage: "Did you fix that bug?",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-  ]
+  /******************************************************************
+   * CIPHER-X: REAL-TIME USER CONTACTS SYSTEM
+   * Maintains active users list with connection status
+   * Automatically refreshes when users come online/offline
+   ******************************************************************/
+  const [contacts, setContacts] = useState<Contact[]>([])
 
-  // CIPHER-X: Mock data for demonstration when no real messages available
-  const mockMessages: Message[] = [
-    {
-      id: 1,
-      sender: "Jessica82",
-      content: "Hey, how are you?",
-      timestamp: "10:30 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 2,
-      sender: "You",
-      content: "I'm good! Just working on this new project.",
-      timestamp: "10:32 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 3,
-      sender: "Jessica82",
-      content: "That sounds cool! What are you building?",
-      timestamp: "10:33 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 4,
-      sender: "You",
-      content: "A messaging app inspired by MSN Messenger and Discord!",
-      timestamp: "10:35 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 5,
-      sender: "Jessica82",
-      content: "Wow, that's so nostalgic! I miss the old MSN days.",
-      timestamp: "10:36 AM",
-      isCurrentUser: false,
-    },
-  ]
+  // OMEGA-MATRIX: Load real user contacts from the backend
+  useEffect(() => {
+    if (!user?.id) return
+    
+    // CIPHER-X: Function to fetch contacts from the backend
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/contacts`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          // Transform backend data to Contact format
+          const contactsList = data.data.map((contact: any) => ({
+            id: contact.id,
+            name: contact.displayName || contact.username,
+            status: contact.status || 'offline',
+            lastMessage: contact.lastMessage || 'Start a conversation...',
+            avatar: contact.avatar || `/api/avatar/${contact.id}`,
+          }))
+          setContacts(contactsList)
+        } else {
+          // If no contacts found, set empty array
+          setContacts([])
+          setError('Failed to load contacts')
+        }
+      } catch (err) {
+        console.error('Error fetching contacts:', err)
+        setError('Failed to load contacts')
+        setContacts([])
+      }
+    }
+    
+    fetchContacts()
+    
+    // OMEGA-MATRIX: Real-time contact status updates
+    const handleUserOnline = (data: any) => {
+      setContacts(prev => 
+        prev.map(contact => {
+          if (contact.id === data.userId) {
+            return { ...contact, status: 'online' }
+          }
+          return contact
+        })
+      )
+    }
+    
+    const handleUserOffline = (data: any) => {
+      setContacts(prev => 
+        prev.map(contact => {
+          if (contact.id === data.userId) {
+            return { ...contact, status: 'offline' }
+          }
+          return contact
+        })
+      )
+    }
+    
+    const handleUserStatusChanged = (data: any) => {
+      setContacts(prev => 
+        prev.map(contact => {
+          if (contact.id === data.userId) {
+            return { ...contact, status: data.status }
+          }
+          return contact
+        })
+      )
+    }
+    
+    // Subscribe to events
+    if (connectionState === ConnectionState.CONNECTED) {
+      subscribeToEvent('userOnline', handleUserOnline)
+      subscribeToEvent('userOffline', handleUserOffline)
+      subscribeToEvent('userStatusChanged', handleUserStatusChanged)
+    }
+    
+    // Refresh contacts list periodically
+    const refreshInterval = setInterval(fetchContacts, 60000) // Refresh every minute
+    
+    return () => {
+      clearInterval(refreshInterval)
+    }
+  }, [user?.id, token, connectionState])
+
+  /******************************************************************
+   * CIPHER-X: QUANTUM CONVERSATION LOADER
+   * Initializes chat history when contact is selected
+   * Loads and formats historical messages from the backend
+   ******************************************************************/
+  useEffect(() => {
+    if (!selectedContact || !user?.id) return;
+    
+    // Create direct channel ID (user_[contactId])
+    const directChannelId = `user_${selectedContact.id}`;
+    setActiveChannel(directChannelId);
+    
+    // Join the channel to receive real-time updates
+    joinChannel({
+      channelId: directChannelId
+    });
+    
+    // Reset message input
+    setMessageInput('');
+    
+    // Scroll to bottom of messages
+    setTimeout(() => {
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    
+    return () => {
+      // Leave the channel when unmounting or changing contacts
+      if (directChannelId) {
+        leaveChannel({
+          channelId: directChannelId
+        });
+      }
+      setActiveChannel(null);
+    };
+  }, [selectedContact, user?.id]);
+  // CIPHER-X: Message history management
+  useEffect(() => {
+    // Scroll to bottom whenever messages change
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+  
+  // OMEGA-MATRIX: Connection management
+  useEffect(() => {
+    if (connectionState === ConnectionState.DISCONNECTED && user?.id) {
+      /******************************************************************
+       * CIPHER-X: COMMUNICATION PROTOCOL INITIALIZATION
+       * Reconnects the socket with proper authentication credentials
+       * Uses global auth token stored in the auth context
+       ******************************************************************/
+      // Connect to the socket server
+      connectSocket();
+    }
+    
+    return () => {
+      // Clean up socket connection
+      if (connectionState === ConnectionState.CONNECTED) {
+        disconnectSocket();
+      }
+    };
+  }, [connectionState, user, token]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -303,22 +399,35 @@ export function DirectMessages() {
             </div>
 
             <div id="chat-window" className="flex-1 overflow-y-auto p-3 bg-[#FFFFFF]">
-              {/* OMEGA-MATRIX: Real-time message display with fallback to mock data */}
-              {(messages && messages.length > 0 ? messages : mockMessages).map((message: Message) => (
-                <div key={message.id} className={`mb-3 ${message.isCurrentUser ? "text-right" : "text-left"}`}>
-                  <div
-                    className={`inline-block max-w-[80%] p-2 rounded-md ${
-                      message.isCurrentUser ? "bg-[#D9E7F5] text-[#333333]" : "bg-[#F5F5F5] text-[#333333]"
-                    }`}
-                  >
-                    <div className="text-xs font-semibold mb-1">{message.isCurrentUser ? "You" : message.sender}</div>
-                    <div className="text-sm">{message.content}</div>
-                    <div className="text-xs text-gray-500 mt-1">{message.timestamp}</div>
+              {/* OMEGA-MATRIX: Real-time message display */}
+              {messages.length > 0 ? (
+                messages.map((message: Message) => (
+                  <div key={message.id} className={`mb-3 ${message.isCurrentUser ? "text-right" : "text-left"}`}>
+                    <div
+                      className={`inline-block max-w-[80%] p-2 rounded-md ${
+                        message.isCurrentUser ? "bg-[#D9E7F5] text-[#333333]" : "bg-[#F5F5F5] text-[#333333]"
+                      }`}
+                    >
+                      <div className="text-xs font-semibold mb-1">{message.isCurrentUser ? "You" : message.sender}</div>
+                      <div className="text-sm">{message.content}</div>
+                      <div className="text-xs text-gray-500 mt-1">{message.timestamp}</div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <div className="mb-4 opacity-50">
+                    <ChaosLogo />
+                  </div>
+                  <p className="text-sm">
+                    {selectedContact ? 'No messages yet. Start the conversation!' : 'Select a contact to start chatting'}
+                  </p>
                 </div>
-              ))}
+              )}
 
-              {isTyping && <div className="text-xs text-gray-500 italic ml-2">{selectedContact.name} is typing...</div>}
+              {isTyping && selectedContact && (
+                <div className="text-xs text-gray-500 italic ml-2">{selectedContact.name} is typing...</div>
+              )}
             </div>
 
             <div className="p-3 bg-[#ECE9D8] border-t border-[#D4D0C8]">

@@ -11,6 +11,11 @@
 
 // ==================== USER INTERFACES ====================
 
+/******************************************************************
+ * OMEGA-MATRIX: USER QUANTUM IDENTITY SCHEMA
+ * Complete user profile data structure with preferences
+ * Defines all modifiable and system-managed user properties
+ ******************************************************************/
 export interface User {
   id: string;
   username: string;
@@ -18,9 +23,22 @@ export interface User {
   email: string;
   avatar?: string;
   status: UserStatus;
+  statusMessage?: string;
+  personalMessage?: string;
   customStatus?: string;
   createdAt: Date;
   updatedAt: Date;
+  preferences?: {
+    isAnimated?: boolean;
+    enableWinks?: boolean;
+    theme?: string;
+    language?: string;
+    notifications?: {
+      sound?: boolean;
+      messagePreview?: boolean;
+      friendRequests?: boolean;
+    }
+  }
 }
 
 export interface UserProfile extends User {
@@ -40,13 +58,19 @@ export interface UserSettings {
   autoLogin: boolean;
 }
 
+/******************************************************************
+ * NEXUS-IDENTITY: USER STATUS CODEX
+ * Classic MSN-style user presence indicators
+ * Used for real-time availability tracking
+ ******************************************************************/
 export enum UserStatus {
   ONLINE = 'online',
   AWAY = 'away',
   BUSY = 'busy',
-  APPEAR_OFFLINE = 'offline',
-  INVISIBLE = 'invisible',
-  CUSTOM = 'custom'
+  BRB = 'brb',
+  PHONE = 'phone',
+  LUNCH = 'lunch',
+  OFFLINE = 'offline'
 }
 
 // ==================== MESSAGE INTERFACES ====================
