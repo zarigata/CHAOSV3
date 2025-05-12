@@ -1,12 +1,26 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "chaosv3",
+  "version": "1.0.0",
   "private": true,
+  "description": "CHAOSV3 - A modern MSN-inspired chat platform",
+  "author": "CHAOSV3 Team",
+  "license": "MIT",
+  "main": "electron/dist/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run electron:watch\"",
+    "electron:watch": "tsc -p electron/tsconfig.electron.json -w",
+    "electron:build": "tsc -p electron/tsconfig.electron.json",
+    "electron:start": "npm run electron:build && electron .",
+    "package": "npm run build && npm run electron:build && electron-builder",
+    "build:win": "npm run build && npm run electron:build && electron-builder --win",
+    "build:exe": "npm run build:win",
+    "build:linux": "npm run build && npm run electron:build && electron-builder --linux",
+    "build:mac": "npm run build && npm run electron:build && electron-builder --mac",
+    "build:all": "npm run build && npm run electron:build && electron-builder -mwl"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -42,6 +56,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
+    "electron-updater": "^6.2.0",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
@@ -53,6 +68,7 @@
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "socket.io-client": "^4.7.4",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
@@ -63,8 +79,52 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.chaosv3.app",
+    "productName": "CHAOSV3",
+    "directories": {
+      "output": "build/win"
+    },
+    "files": [
+      "electron/dist/**/*",
+      "electron/icons/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist",
+        "to": "backend/dist"
+      }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "electron/icons/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Network;Chat"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "electron/icons/icon.ico",
+      "uninstallerIcon": "electron/icons/icon.ico",
+      "installerHeaderIcon": "electron/icons/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    }
   }
 }
