@@ -31,8 +31,10 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@fastify/type-provider-typebox": "^5.1.0",
     "@types/bcrypt": "^5.0.2",
     "@types/jest": "^29.5.2",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.47",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.59.8",

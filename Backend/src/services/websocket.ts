@@ -1,9 +1,14 @@
 // ==========================================================
 // 🔌 C.H.A.O.S. WEBSOCKET SERVICE 🔌
 // ==========================================================
-// - REAL-TIME MESSAGING AND PRESENCE DETECTION
-// - SOCKET.IO IMPLEMENTATION WITH AUTHENTICATION
-// - EVENT HANDLERS FOR USER INTERACTIONS
+// █▀█ █▀▀ █▀█ █▀█ █▄▀ █▀▀ ▄█▀   █▀█ █▀█ ▄▀▄ █▀▀ █▀█
+// ▄█▄ █▄█ █▀▄ █▀▄ █▀█ ██▄ █▀█   █▀▀ █▄█ █▀█ █▄█ █▀▄
+// ==========================================================
+// [CODEX-1337] REAL-TIME MESSAGING AND PRESENCE DETECTION
+// [CODEX-1337] SOCKET.IO IMPLEMENTATION WITH JWT AUTHENTICATION
+// [CODEX-1337] EVENT HANDLERS FOR USER INTERACTIONS
+// [CODEX-1337] CHANNEL AND DIRECT MESSAGE HANDLING
+// [CODEX-1337] TYPING INDICATORS AND READ RECEIPTS
 // ==========================================================
 
 import { Server, Socket } from 'socket.io';
