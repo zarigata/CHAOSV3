@@ -1,25 +1,63 @@
 // ==========================================================
 // 🔑 C.H.A.O.S. AUTHENTICATION ROUTES 🔑
 // ==========================================================
-// - SECURE JWT-BASED AUTH SYSTEM WITH REFRESH TOKENS
-// - REGISTER, LOGIN, TOKEN REFRESH, LOGOUT ENDPOINTS
-// - PASSWORD HASHING AND VALIDATION WITH BCRYPT
+// █▀█ █░█ ▀█▀ █▄▀ █▀▀ ██▄ ▀█▀ █░█ ▀█▀ █░█ █▄▄ ██▄
+// █▀▄ █▄█ ░█░ █▀█ ██▄ █ₐ▄ ░█░ █▄█ ░█░ █▄█ ▆░▆ ▀▄█
+// ==========================================================
+// [CODEX-1337] SECURE JWT-BASED AUTH SYSTEM WITH REFRESH TOKENS
+// [CODEX-1337] REGISTER, LOGIN, TOKEN REFRESH, LOGOUT ENDPOINTS
+// [CODEX-1337] PASSWORD HASHING AND VALIDATION WITH BCRYPT
+// [CODEX-1337] ACCOUNT MANAGEMENT AND PROFILE UPDATES
 // ==========================================================
 
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import { authLogger as logger } from '../utils/logger';
 
+// Import controllers
+import { 
+  registerUser,
+  loginUser,
+  refreshToken,
+  logoutUser,
+  updateUserProfile,
+  getUserProfile,
+  deleteAccount
+} from '../controllers/user.controller';
+
 // Initialize Prisma client
 const prisma = new PrismaClient();
 
-// Authentication routes
-export async function authRoutes(fastify: FastifyInstance) {
+/**
+ * [CODEX-1337] Authentication routes for user registration, login, and management
+ * [CODEX-1337] Implements secure JWT authentication with refresh tokens
+ */
+export async function authRoutes(fastify: FastifyInstance): Promise<void> {
+  // Register all authentication routes within this context
+  fastify.register(async (routes: FastifyInstance) => {
+    // User registration and authentication
+    routes.post('/register', registerUser);
+    routes.post('/login', loginUser);
+    routes.post('/refresh', refreshToken);
+    routes.post('/logout', logoutUser);
+    
+    // Protected routes that require authentication
+    routes.register(async (protectedRoutes: FastifyInstance) => {
+      protectedRoutes.addHook('onRequest', fastify.authenticate);
+      
+      // User profile management
+      protectedRoutes.get('/profile', getUserProfile);
+      protectedRoutes.put('/profile', updateUserProfile);
+      protectedRoutes.delete('/account', deleteAccount);
+    });
+  });
+  
+  // Store the original auth routes for reference
   // ==========================================================
-  // 📝 INPUT VALIDATION SCHEMAS
+  // 📝 ORIGINAL VALIDATION SCHEMAS AND IMPLEMENTATIONS
   // ==========================================================
   
   // Register request validation schema

@@ -16,6 +16,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@chaos/backend": "file:",
     "@fastify/cors": "^8.2.1",
     "@fastify/jwt": "^7.0.0",
     "@fastify/swagger": "^8.3.1",
