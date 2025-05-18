@@ -1,9 +1,13 @@
 // ==========================================================
 // 📝 C.H.A.O.S. LOGGING SYSTEM 📝
 // ==========================================================
-// - CENTRALIZED LOGGING UTILITY FOR SERVER OPERATIONS
-// - CONFIGURABLE LOG LEVELS AND FORMATS
-// - HANDLES BOTH CONSOLE AND FILE LOGGING
+// █▀█ █▀█ █▀▀ █▀▀ █▀█ ▄▀█ █▀▀   █▀▀ █▄█ █▀█ █ ▄▀█ █▀▀ 
+// ▄█▄ █▄█ ██▄ ██▄ █▀▄ █▀█ █▄▄   ██▄ ░█░ █▀▄ █ █▀█ █▄░
+// ==========================================================
+// [CODEX-1337] CENTRALIZED LOGGING UTILITY FOR SERVER OPERATIONS
+// [CODEX-1337] CONFIGURABLE LOG LEVELS AND FORMATS
+// [CODEX-1337] CONSOLE AND FILE LOGGING OPTIONS
+// [CODEX-1337] CROSS-PLATFORM COMPATIBILITY (WINDOWS/LINUX)
 // ==========================================================
 
 import { pino } from 'pino';

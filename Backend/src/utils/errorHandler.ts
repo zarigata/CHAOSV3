@@ -1,9 +1,14 @@
 // ==========================================================
 // ⚠️ C.H.A.O.S. ERROR HANDLING SYSTEM ⚠️
 // ==========================================================
-// - CENTRALIZED ERROR HANDLING FOR FASTIFY REQUESTS
-// - FORMATS ERROR RESPONSES AND LOGS ISSUES
-// - HANDLES DIFFERENT ERROR TYPES WITH APPROPRIATE CODES
+// █▀█ █▀█ █░█ █▀▄ █▀█ █▀▄ █▀ █░█ █▀█   █▀▄ █▐█ █▀▀ █▀▀ █▀▄ █▀█
+// ▄█▄ █▄█ █▄█ █▀▄ █▀▄ █▀▄ ▄█ █▄█ █▀▄   █▀▄ ░█░ █▄▄ █▄▄ █▀▄ █▀▄
+// ==========================================================
+// [CODEX-1337] CENTRALIZED ERROR HANDLING FOR FASTIFY REQUESTS
+// [CODEX-1337] FORMATS ERROR RESPONSES WITH CONSISTENT STRUCTURE
+// [CODEX-1337] HANDLES VARIOUS ERROR TYPES (VALIDATION, DB, AUTH, ETC)
+// [CODEX-1337] PROVIDES DETAILED LOGGING FOR TROUBLESHOOTING
+// [CODEX-1337] SANITIZES SENSITIVE DATA BEFORE SENDING RESPONSES
 // ==========================================================
 
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
