@@ -1,9 +1,14 @@
 // ==========================================================
 // ⚙️ C.H.A.O.S. SERVER - MAIN ENTRY POINT ⚙️ 
 // ==========================================================
-// - FASTIFY SERVER SETUP WITH SOCKET.IO INTEGRATION
-// - JWT AUTH, CORS, AND SWAGGER DOCUMENTATION
-// - CENTRALIZED ERROR HANDLING AND LOGGING
+// █▀▄▀█ █▀█ █ █▄░█   █▀▀ █▄░█ ▀█▀ █▀█ █▄█   █▀█ █▀█ █ █▄░█ ▀█▀
+// █░▀░█ █▀█ █ █░▀█   ██▄ █░▀█ ░█░ █▀▄ ░█░   █▀▀ █▄█ █ █░▀█ ░█░
+// ==========================================================
+// [CODEX-1337] FASTIFY SERVER SETUP WITH SOCKET.IO INTEGRATION
+// [CODEX-1337] JWT AUTH, CORS, AND SWAGGER DOCUMENTATION
+// [CODEX-1337] CENTRALIZED ERROR HANDLING AND LOGGING
+// [CODEX-1337] REAL-TIME MESSAGING VIA WEBSOCKETS
+// [CODEX-1337] CROSS-PLATFORM COMPATIBLE (LINUX/WINDOWS)
 // ==========================================================
 
 import fastify, { FastifyInstance } from 'fastify';
