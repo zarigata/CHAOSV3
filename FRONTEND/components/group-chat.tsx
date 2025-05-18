@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useAuth } from "./auth-provider"
-import { useMessaging } from "./messaging-provider"
+import { useState } from "react"
 import { Send, Paperclip, Smile, Users, PlusCircle, Video, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,16 +14,11 @@ interface Message {
   avatar: string
 }
 
-/******************************************************************
- * NEXUS-IDENTITY: GROUP MEMBER SCHEMA
- * User entry with classic MSN-style presence indicators
- * Matches expanded status options in shared User type
- ******************************************************************/
 interface GroupMember {
-  id: number;
-  name: string;
-  status: "online" | "away" | "busy" | "brb" | "phone" | "lunch" | "offline";
-  avatar: string;
+  id: number
+  name: string
+  status: "online" | "away" | "busy" | "offline"
+  avatar: string
 }
 
 interface ChatGroup {
@@ -35,289 +28,112 @@ interface ChatGroup {
   messages: Message[]
 }
 
-/******************************************************************
- * ╔════════════════════════════════════════════════════════════╗
- * ║ << C.H.A.O.S.V3 - CODEX >> GROUP CHAT INTERFACE          ║
- * ╠════════════════════════════════════════════════════════════╣
- * ║ Real-time group messaging with user presence and history   ║
- * ╚════════════════════════════════════════════════════════════╝
- ******************************************************************/
 export function GroupChat() {
-  // CIPHER-X: Core state management
   const [selectedGroup, setSelectedGroup] = useState<ChatGroup | null>(null)
   const [messageInput, setMessageInput] = useState("")
-  const [groups, setGroups] = useState<ChatGroup[]>([])
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const messageEndRef = useRef<HTMLDivElement>(null)
-  
-  // OMEGA-MATRIX: Authentication & Messaging
-  const { user, token } = useAuth()
-  const { 
-    messages: socketMessages, 
-    sendMessage, 
-    connectionState, 
-    typingUsers, 
-    sendTypingIndicator, 
-    activeChannel,
-    setActiveChannel,
-    joinChannel
-  } = useMessaging()
-  
-  /******************************************************************
-   * CIPHER-X: GROUP DATA ACQUISITION PROTOCOL
-   * Fetches all available groups from the backend API
-   * Populates the groups list with real data
-   ******************************************************************/
-  /******************************************************************
-   * CIPHER-X: GROUP DATA ACQUISITION PROTOCOL
-   * Tries to fetch groups from API with fallback to local mock data
-   * Handles API connectivity issues gracefully
-   ******************************************************************/
-  useEffect(() => {
-    const fetchGroups = async () => {
-      if (!user?.id) return
-      
-      try {
-        setLoading(true)
-        setError(null)
-        
-        // Attempt to fetch from API
-        let apiDataFetched = false;
-        
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/servers/channels`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            // Short timeout to prevent long waits if API is down
-            signal: AbortSignal.timeout(5000)
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            console.log('Successfully fetched group data:', data)
-            
-            // When API endpoint is implemented, we'll process real data here
-            // const transformedGroups = data.data.map(...)
-            // setGroups(transformedGroups)
-            // apiDataFetched = true;
-          }
-        } catch (apiError) {
-          console.warn('API fetch failed, using fallback data:', apiError)
-        }
-        
-        // If API data wasn't successfully fetched, use fallback mock data
-        if (!apiDataFetched) {
-          // Mock data for development/fallback
-          const mockGroups: ChatGroup[] = [
-            {
-              id: 1,
-              name: "CHAOS Development",
-              members: [
-                {
-                  id: 1,
-                  name: user.displayName || user.username,
-                  status: "online",
-                  avatar: user.avatar || `/api/avatar/${user.id}`
-                },
-                {
-                  id: 2,
-                  name: "Alice Dev",
-                  status: "away",
-                  avatar: "/avatars/alice.png"
-                },
-                {
-                  id: 3,
-                  name: "Bob Tester",
-                  status: "busy",
-                  avatar: "/avatars/bob.png"
-                }
-              ],
-              messages: [
-                {
-                  id: 101,
-                  sender: "Alice Dev",
-                  content: "Just pushed some updates to the server controller",
-                  timestamp: new Date(Date.now() - 3600000).toISOString(),
-                  avatar: "/avatars/alice.png"
-                },
-                {
-                  id: 102,
-                  sender: "Bob Tester",
-                  content: "I'll test it right away",
-                  timestamp: new Date(Date.now() - 1800000).toISOString(),
-                  avatar: "/avatars/bob.png"
-                },
-                {
-                  id: 103,
-                  sender: user.displayName || user.username,
-                  content: "Great work team! Let me know if you need anything.",
-                  timestamp: new Date(Date.now() - 900000).toISOString(),
-                  avatar: user.avatar || `/api/avatar/${user.id}`
-                }
-              ]
-            },
-            {
-              id: 2,
-              name: "UI/UX Design Group",
-              members: [
-                {
-                  id: 1,
-                  name: user.displayName || user.username,
-                  status: "online",
-                  avatar: user.avatar || `/api/avatar/${user.id}`
-                },
-                {
-                  id: 4,
-                  name: "Charlie Designer",
-                  status: "online",
-                  avatar: "/avatars/charlie.png"
-                },
-                {
-                  id: 5,
-                  name: "Diana UX",
-                  status: "brb",
-                  avatar: "/avatars/diana.png"
-                }
-              ],
-              messages: []
-            },
-          ];
-          
-          setGroups(mockGroups);
-          console.info('Using mock group data until API is implemented');
-        }
-      } catch (error) {
-        console.error('Error in group data handling:', error);
-        setError('Failed to load groups. Please try again later.');
-        setGroups([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchGroups();
-  }, [user, token])
-  
-  // OMEGA-MATRIX: Load real message history when a group is selected
-  useEffect(() => {
-    if (!selectedGroup || !user?.id) return;
-    
-    // Create group channel ID
-    const groupChannelId = `group_${selectedGroup.id}`;
-    setActiveChannel(groupChannelId);
-    
-    // Join the channel to receive real-time updates
-    joinChannel({
-      channelId: groupChannelId
-    });
-    
-    // Fetch message history for the selected group
-    const fetchGroupMessages = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/groups/${selectedGroup.id}/messages`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          // Transform message data
-          const messageHistory = data.data.map((msg: any) => ({
-            id: msg._id,
-            sender: msg.sender.displayName || msg.sender.username,
-            content: msg.content,
-            timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            avatar: msg.sender.avatar || `/api/avatar/${msg.sender._id}`,
-          }));
-          
-          // Update the selected group with message history
-          setSelectedGroup(prev => prev ? {...prev, messages: messageHistory} : null);
-        }
-      } catch (err) {
-        console.error('Error fetching group messages:', err);
-        setError('Failed to load message history');
-      }
-    };
-    
-    fetchGroupMessages();
-    
-    // Cleanup when unmounting or changing groups
-    return () => {
-      const groupChannelId = `group_${selectedGroup.id}`;
-      setActiveChannel(null);
-    };
-  }, [selectedGroup?.id, user?.id, token]);
 
-  // CIPHER-X: Message sending functionality
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedGroup || !user?.id) return;
-    
-    try {
-      setSending(true);
-      
-      await sendMessage({
-        content: messageInput,
-        channel: `group_${selectedGroup.id}`,
-        sender: {
-          id: user.id,
-          username: user.username,
-          displayName: user.displayName || user.username
-        }
-      });
-      
-      setMessageInput('');
-      
-      // Scroll to bottom
-      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setError('Failed to send message');
-    } finally {
-      setSending(false);
-    }
-  };
-  
-  /******************************************************************
-   * CIPHER-X: UI INTERACTION HANDLERS
-   * Process user interactions with the group chat interface
-   * Handle message input, selection, and display
-   ******************************************************************/
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessageInput(e.target.value);
-    
-    // Send typing indicator to group channel
-    if (selectedGroup) {
-      sendTypingIndicator(`group_${selectedGroup.id}`, e.target.value.length > 0);
-    }
-  };
-  
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-  
-  const handleGroupSelect = (group: ChatGroup) => {
-    setSelectedGroup(group);
-    setMessageInput('');
-    setError(null);
-  };
-  
-  // CIPHER-X: Keep messages scrolled to bottom on new messages
-  useEffect(() => {
-    if (messageEndRef.current && selectedGroup?.messages) {
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [selectedGroup?.messages?.length]);
+  const groups: ChatGroup[] = [
+    {
+      id: 1,
+      name: "Gaming Squad",
+      members: [
+        { id: 1, name: "CoolUser2000", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 2, name: "GamerGirl2000", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 3, name: "ProGamer99", status: "away", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 4, name: "NoobMaster69", status: "offline", avatar: "/placeholder.svg?height=32&width=32" },
+      ],
+      messages: [
+        {
+          id: 1,
+          sender: "GamerGirl2000",
+          content: "Anyone up for some gaming tonight?",
+          timestamp: "2:30 PM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 2,
+          sender: "ProGamer99",
+          content: "I'm in! What are we playing?",
+          timestamp: "2:32 PM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 3,
+          sender: "CoolUser2000",
+          content: "How about that new MMO everyone's talking about?",
+          timestamp: "2:35 PM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: "Project Team",
+      members: [
+        { id: 1, name: "CoolUser2000", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 5, name: "ProjectManager", status: "busy", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 6, name: "DesignerDude", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 7, name: "CodeWizard", status: "away", avatar: "/placeholder.svg?height=32&width=32" },
+      ],
+      messages: [
+        {
+          id: 1,
+          sender: "ProjectManager",
+          content: "Team meeting tomorrow at 10 AM",
+          timestamp: "11:00 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 2,
+          sender: "DesignerDude",
+          content: "I'll have the mockups ready by then",
+          timestamp: "11:05 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 3,
+          sender: "CodeWizard",
+          content: "Backend is almost done, just fixing some bugs",
+          timestamp: "11:10 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: "C.H.A.O.S. Team",
+      members: [
+        { id: 1, name: "CoolUser2000", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 8, name: "SystemAdmin", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 9, name: "UXDesigner", status: "busy", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 10, name: "BackendDev", status: "away", avatar: "/placeholder.svg?height=32&width=32" },
+        { id: 11, name: "FrontendDev", status: "online", avatar: "/placeholder.svg?height=32&width=32" },
+      ],
+      messages: [
+        {
+          id: 1,
+          sender: "SystemAdmin",
+          content: "Welcome to the C.H.A.O.S. team channel!",
+          timestamp: "9:00 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 2,
+          sender: "UXDesigner",
+          content: "I've uploaded the new design mockups for the emoticon system",
+          timestamp: "9:15 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: 3,
+          sender: "BackendDev",
+          content: "Server update scheduled for tonight at 2 AM",
+          timestamp: "9:30 AM",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+      ],
+    },
+  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -334,10 +150,11 @@ export function GroupChat() {
     }
   }
 
-  /******************************************************************
-   * CIPHER-X: MESSAGE RENDERING UTILITIES
-   * Helper functions for consistent UI display of messages and statuses
-   ******************************************************************/
+  const handleSendMessage = () => {
+    if (messageInput.trim() === "" || !selectedGroup) return
+    // In a real app, we would add the message to the messages array
+    setMessageInput("")
+  }
 
   return (
     <div className="flex h-full border border-[#D4D0C8] rounded-md overflow-hidden bg-white">

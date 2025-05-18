@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "./auth-provider"
+import { useState } from "react"
 import { Search, Plus, Network, Users, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,57 +34,63 @@ export function ServerList({ onServerSelect }: ServerListProps) {
   const [newServerDescription, setNewServerDescription] = useState("")
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
-  /******************************************************************
-   * CIPHER-X: SERVER DATA QUANTUM PROCESSOR
-   * Retrieves real server data from the backend API
-   * Maintains current list of available communication servers
-   ******************************************************************/
-  const [servers, setServers] = useState<Server[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const { token } = useAuth()
-
-  // OMEGA-MATRIX: Fetch server data from the backend
-  useEffect(() => {
-    const fetchServers = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/servers/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch servers')
-        }
-
-        const data = await response.json()
-        
-        // Transform API data to match our Server interface
-        const transformedServers = data.data.map((server: any) => ({
-          id: server._id,
-          name: server.name,
-          description: server.description || 'No description provided',
-          memberCount: server.members?.length || 0,
-          status: server.status || 'online',
-          icon: server.icon || '🖥️',
-          categories: server.categories || ['General'],
-        }))
-
-        setServers(transformedServers)
-        setError(null)
-      } catch (err) {
-        console.error('Error fetching servers:', err)
-        setError('Failed to load servers. Please try again later.')
-        setServers([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchServers()
-  }, [token])
+  // Sample data
+  const servers: Server[] = [
+    {
+      id: "server1",
+      name: "Gaming Alliance",
+      description: "A hub for gamers to connect and play together",
+      memberCount: 128,
+      status: "online",
+      icon: "🎮",
+      categories: ["Gaming", "Featured"],
+    },
+    {
+      id: "server2",
+      name: "Tech Enthusiasts",
+      description: "Discuss the latest in technology and programming",
+      memberCount: 95,
+      status: "online",
+      icon: "💻",
+      categories: ["Technology", "Featured"],
+    },
+    {
+      id: "server3",
+      name: "Movie Buffs",
+      description: "For fans of cinema and film discussion",
+      memberCount: 76,
+      status: "maintenance",
+      icon: "🎬",
+      categories: ["Entertainment"],
+    },
+    {
+      id: "server4",
+      name: "Music Lovers",
+      description: "Share and discover new music",
+      memberCount: 112,
+      status: "busy",
+      icon: "🎵",
+      categories: ["Entertainment", "Featured"],
+    },
+    {
+      id: "server5",
+      name: "Book Club",
+      description: "Monthly book discussions and recommendations",
+      memberCount: 54,
+      status: "online",
+      icon: "📚",
+      categories: ["Education"],
+    },
+    {
+      id: "server6",
+      name: "Fitness Friends",
+      description: "Workout tips and motivation",
+      memberCount: 87,
+      status: "online",
+      icon: "💪",
+      categories: ["Health"],
+    },
+  ]
 
   const categories = ["Featured", "Gaming", "Technology", "Entertainment", "Education", "Health"]
 

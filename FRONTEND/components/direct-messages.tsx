@@ -1,39 +1,12 @@
-/******************************************************************
- * ╔════════════════════════════════════════════════════════════╗
- * ║     << C.H.A.O.S.V3 - CODEX >> DIRECT MESSAGES INTERFACE    ║
- * ╠════════════════════════════════════════════════════════════╣
- * ║ One-on-one messaging functionality with real-time updates    ║
- * ║ Includes typing indicators and message delivery status      ║
- * ╚════════════════════════════════════════════════════════════╝
- ******************************************************************/
-
 "use client"
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { Send, Paperclip, Smile, Wand2 } from "lucide-react"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { useAuth } from "./auth-provider"
-import { useMessaging } from "./messaging-provider"
-import { Alert, AlertDescription } from "./ui/alert"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-// CIPHER-X: Import socket types and utilities
-import { 
-  connectSocket, 
-  disconnectSocket, 
-  sendMessage, 
-  joinChannel, 
-  leaveChannel,
-  subscribeToEvent,
-  MessageData,
-  ConnectionState
-} from "@/lib/socket"
-import { ChaosLogo } from "./chaos-logo"
+import { Input } from "@/components/ui/input"
+import { ChaosLogo } from "@/components/chaos-logo"
 
 interface Message {
   id: number
@@ -51,209 +24,79 @@ interface Contact {
   avatar: string
 }
 
-/******************************************************************
- * OMEGA-MATRIX CONVERSION ALGORITHM
- * Transforms raw socket message data into standardized UI format
- * Ensures consistent display regardless of message source
- ******************************************************************/
-const convertMessageToUiFormat = (msg: MessageData, currentUserId: string): Message => {
-  return {
-    id: parseInt(msg.id as string) || Math.floor(Math.random() * 10000),
-    sender: msg.sender?.displayName || msg.sender?.username || 'Unknown',
-    content: msg.content || '',
-    timestamp: new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    isCurrentUser: msg.sender?.id === currentUserId
-  };
-};
-
 export function DirectMessages() {
-  // OMEGA-MATRIX: Authentication & Messaging Systems
-  const { user, token } = useAuth();
-  const { 
-    messages: socketMessages, 
-    sendMessage, 
-    connectionState, 
-    error: messagingError, 
-    typingUsers, 
-    sendTypingIndicator, 
-    activeChannel,
-    setActiveChannel,
-    joinChannel
-  } = useMessaging();
-  
-  // CIPHER-X: Convert socket messages to UI format
-  const messages = socketMessages && Array.isArray(socketMessages) 
-    ? socketMessages.map(msg => convertMessageToUiFormat(msg, user?.id || ''))
-    : [];
-  
-  // CIPHER-X: UI State Management
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [messageInput, setMessageInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [typing, setTyping] = useState(false)
-  const messageEndRef = useRef<HTMLDivElement>(null)
-  
-  // CIPHER-X: Message delivery tracking
-  const [sending, setSending] = useState(false)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  /******************************************************************
-   * CIPHER-X: REAL-TIME USER CONTACTS SYSTEM
-   * Maintains active users list with connection status
-   * Automatically refreshes when users come online/offline
-   ******************************************************************/
-  const [contacts, setContacts] = useState<Contact[]>([])
+  const contacts: Contact[] = [
+    {
+      id: 1,
+      name: "Jessica82",
+      status: "online",
+      lastMessage: "Hey, how are you?",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      id: 2,
+      name: "CoolDude99",
+      status: "away",
+      lastMessage: "Check out this cool website",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      id: 3,
+      name: "GamerGirl2000",
+      status: "busy",
+      lastMessage: "I'm playing that new game",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      id: 4,
+      name: "TechWizard",
+      status: "offline",
+      lastMessage: "Did you fix that bug?",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+  ]
 
-  // OMEGA-MATRIX: Load real user contacts from the backend
-  useEffect(() => {
-    if (!user?.id) return
-    
-    // CIPHER-X: Function to fetch contacts from the backend
-    const fetchContacts = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/contacts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          // Transform backend data to Contact format
-          const contactsList = data.data.map((contact: any) => ({
-            id: contact.id,
-            name: contact.displayName || contact.username,
-            status: contact.status || 'offline',
-            lastMessage: contact.lastMessage || 'Start a conversation...',
-            avatar: contact.avatar || `/api/avatar/${contact.id}`,
-          }))
-          setContacts(contactsList)
-        } else {
-          // If no contacts found, set empty array
-          setContacts([])
-          setError('Failed to load contacts')
-        }
-      } catch (err) {
-        console.error('Error fetching contacts:', err)
-        setError('Failed to load contacts')
-        setContacts([])
-      }
-    }
-    
-    fetchContacts()
-    
-    // OMEGA-MATRIX: Real-time contact status updates
-    const handleUserOnline = (data: any) => {
-      setContacts(prev => 
-        prev.map(contact => {
-          if (contact.id === data.userId) {
-            return { ...contact, status: 'online' }
-          }
-          return contact
-        })
-      )
-    }
-    
-    const handleUserOffline = (data: any) => {
-      setContacts(prev => 
-        prev.map(contact => {
-          if (contact.id === data.userId) {
-            return { ...contact, status: 'offline' }
-          }
-          return contact
-        })
-      )
-    }
-    
-    const handleUserStatusChanged = (data: any) => {
-      setContacts(prev => 
-        prev.map(contact => {
-          if (contact.id === data.userId) {
-            return { ...contact, status: data.status }
-          }
-          return contact
-        })
-      )
-    }
-    
-    // Subscribe to events
-    if (connectionState === ConnectionState.CONNECTED) {
-      subscribeToEvent('userOnline', handleUserOnline)
-      subscribeToEvent('userOffline', handleUserOffline)
-      subscribeToEvent('userStatusChanged', handleUserStatusChanged)
-    }
-    
-    // Refresh contacts list periodically
-    const refreshInterval = setInterval(fetchContacts, 60000) // Refresh every minute
-    
-    return () => {
-      clearInterval(refreshInterval)
-    }
-  }, [user?.id, token, connectionState])
-
-  /******************************************************************
-   * CIPHER-X: QUANTUM CONVERSATION LOADER
-   * Initializes chat history when contact is selected
-   * Loads and formats historical messages from the backend
-   ******************************************************************/
-  useEffect(() => {
-    if (!selectedContact || !user?.id) return;
-    
-    // Create direct channel ID (user_[contactId])
-    const directChannelId = `user_${selectedContact.id}`;
-    setActiveChannel(directChannelId);
-    
-    // Join the channel to receive real-time updates
-    joinChannel({
-      channelId: directChannelId
-    });
-    
-    // Reset message input
-    setMessageInput('');
-    
-    // Scroll to bottom of messages
-    setTimeout(() => {
-      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-    
-    return () => {
-      // Leave the channel when unmounting or changing contacts
-      if (directChannelId) {
-        leaveChannel({
-          channelId: directChannelId
-        });
-      }
-      setActiveChannel(null);
-    };
-  }, [selectedContact, user?.id]);
-  // CIPHER-X: Message history management
-  useEffect(() => {
-    // Scroll to bottom whenever messages change
-    if (messageEndRef.current) {
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-  
-  // OMEGA-MATRIX: Connection management
-  useEffect(() => {
-    if (connectionState === ConnectionState.DISCONNECTED && user?.id) {
-      /******************************************************************
-       * CIPHER-X: COMMUNICATION PROTOCOL INITIALIZATION
-       * Reconnects the socket with proper authentication credentials
-       * Uses global auth token stored in the auth context
-       ******************************************************************/
-      // Connect to the socket server
-      connectSocket();
-    }
-    
-    return () => {
-      // Clean up socket connection
-      if (connectionState === ConnectionState.CONNECTED) {
-        disconnectSocket();
-      }
-    };
-  }, [connectionState, user, token]);
+  const messages: Message[] = [
+    {
+      id: 1,
+      sender: "Jessica82",
+      content: "Hey, how are you?",
+      timestamp: "10:30 AM",
+      isCurrentUser: false,
+    },
+    {
+      id: 2,
+      sender: "You",
+      content: "I'm good! Just working on this new project.",
+      timestamp: "10:32 AM",
+      isCurrentUser: true,
+    },
+    {
+      id: 3,
+      sender: "Jessica82",
+      content: "That sounds cool! What are you building?",
+      timestamp: "10:33 AM",
+      isCurrentUser: false,
+    },
+    {
+      id: 4,
+      sender: "You",
+      content: "A messaging app inspired by MSN Messenger and Discord!",
+      timestamp: "10:35 AM",
+      isCurrentUser: true,
+    },
+    {
+      id: 5,
+      sender: "Jessica82",
+      content: "Wow, that's so nostalgic! I miss the old MSN days.",
+      timestamp: "10:36 AM",
+      isCurrentUser: false,
+    },
+  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -270,46 +113,10 @@ export function DirectMessages() {
     }
   }
 
-  /******************************************************************
- * CIPHER-X MESSAGE TRANSMITTER
- * Processes, validates and dispatches user messages
- * Handles delivery confirmation and error states
- ******************************************************************/
-  const handleSendMessage = async () => {
-    if (messageInput.trim() && (selectedContact || activeChannel)) {
-      try {
-        // OMEGA-MATRIX: Visual feedback during message sending
-        setSending(true);
-        
-        /******************************************************************
-         * OMEGA-MATRIX TRANSMISSION PROTOCOL
-         * Structured message format with required metadata
-         * Ensures consistent message handling across system
-         ******************************************************************/
-        await sendMessage({
-          content: messageInput,
-          channel: activeChannel || `user_${selectedContact?.id}`,
-          sender: {
-            id: user?.id || 'unknown',
-            username: user?.username || 'user',
-            displayName: user?.displayName || user?.username || 'User'
-          }
-        });
-        
-        // CIPHER-X: Reset input and typing state
-        setMessageInput("");
-        setTyping(false);
-        sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, false);
-        
-        // CIPHER-X: Scroll to bottom after sending
-        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      } catch (err) {
-        setError('Failed to send message. Please try again.');
-        console.error('Message send error:', err);
-      } finally {
-        setSending(false);
-      }
-    }
+  const handleSendMessage = () => {
+    if (messageInput.trim() === "") return
+    // In a real app, we would add the message to the messages array
+    setMessageInput("")
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -399,35 +206,21 @@ export function DirectMessages() {
             </div>
 
             <div id="chat-window" className="flex-1 overflow-y-auto p-3 bg-[#FFFFFF]">
-              {/* OMEGA-MATRIX: Real-time message display */}
-              {messages.length > 0 ? (
-                messages.map((message: Message) => (
-                  <div key={message.id} className={`mb-3 ${message.isCurrentUser ? "text-right" : "text-left"}`}>
-                    <div
-                      className={`inline-block max-w-[80%] p-2 rounded-md ${
-                        message.isCurrentUser ? "bg-[#D9E7F5] text-[#333333]" : "bg-[#F5F5F5] text-[#333333]"
-                      }`}
-                    >
-                      <div className="text-xs font-semibold mb-1">{message.isCurrentUser ? "You" : message.sender}</div>
-                      <div className="text-sm">{message.content}</div>
-                      <div className="text-xs text-gray-500 mt-1">{message.timestamp}</div>
-                    </div>
+              {messages.map((message) => (
+                <div key={message.id} className={`mb-3 ${message.isCurrentUser ? "text-right" : "text-left"}`}>
+                  <div
+                    className={`inline-block max-w-[80%] p-2 rounded-md ${
+                      message.isCurrentUser ? "bg-[#D9E7F5] text-[#333333]" : "bg-[#F5F5F5] text-[#333333]"
+                    }`}
+                  >
+                    <div className="text-xs font-semibold mb-1">{message.isCurrentUser ? "You" : message.sender}</div>
+                    <div className="text-sm">{message.content}</div>
+                    <div className="text-xs text-gray-500 mt-1">{message.timestamp}</div>
                   </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                  <div className="mb-4 opacity-50">
-                    <ChaosLogo />
-                  </div>
-                  <p className="text-sm">
-                    {selectedContact ? 'No messages yet. Start the conversation!' : 'Select a contact to start chatting'}
-                  </p>
                 </div>
-              )}
+              ))}
 
-              {isTyping && selectedContact && (
-                <div className="text-xs text-gray-500 italic ml-2">{selectedContact.name} is typing...</div>
-              )}
+              {isTyping && <div className="text-xs text-gray-500 italic ml-2">{selectedContact.name} is typing...</div>}
             </div>
 
             <div className="p-3 bg-[#ECE9D8] border-t border-[#D4D0C8]">
@@ -439,39 +232,19 @@ export function DirectMessages() {
                   <Smile className="h-4 w-4" />
                 </Button>
                 <Input
-                  className="flex-1 border-slate-200 focus:ring-1 focus:ring-slate-300 mr-2"
-                  placeholder="Type a message..."
                   value={messageInput}
-                  onChange={(e) => {
-                    setMessageInput(e.target.value);
-                    // CIPHER-X: Typing indicator management
-                    if (!typing && e.target.value.length > 0) {
-                      setTyping(true);
-                      sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, true);
-                    } else if (typing && e.target.value.length === 0) {
-                      setTyping(false);
-                      sendTypingIndicator(activeChannel || `user_${selectedContact?.id}`, false);
+                  onChange={handleInputChange}
+                  placeholder="Type a message..."
+                  className="flex-1 h-8 bg-white border-[#D4D0C8]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSendMessage()
                     }
                   }}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 />
-                <div className="flex space-x-1">
-                  <Button variant="ghost" size="icon" className="text-slate-500">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-slate-500">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="default"
-                    className="bg-[#0078D4] hover:bg-[#106EBE] text-white px-3 py-1 h-8"
-                    onClick={handleSendMessage}
-                    disabled={!messageInput.trim() || sending || connectionState !== ConnectionState.CONNECTED}
-                  >
-                    <Send className="h-3 w-3 mr-1" />
-                    {sending ? "Sending..." : "Send"}
-                  </Button>
-                </div>
+                <Button onClick={handleSendMessage} className="ml-2 h-8 bg-[#316AC5] hover:bg-[#2A5BD7] text-white">
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </>

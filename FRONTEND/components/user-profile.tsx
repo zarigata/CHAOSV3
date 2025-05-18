@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "./auth-provider"
-import { User } from "@/lib/auth"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,81 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Save, Upload, ImageIcon } from "lucide-react"
 
-/******************************************************************
- * CIPHER-X: USER PROFILE CONTROL CENTER
- * Manages user identity, presence, and customization settings
- * Synchronizes with backend for persistent data storage
- ******************************************************************/
 export function UserProfile() {
-  // OMEGA-MATRIX: Connection to auth system
-  const { user, token, updateProfile } = useAuth()
-  
-  // CIPHER-X: User editable profile fields
-  const [displayName, setDisplayName] = useState(user?.displayName || user?.username || "")
-  const [status, setStatus] = useState<User['status']>(user?.status || "online")
-  const [statusMessage, setStatusMessage] = useState(user?.statusMessage || "")
-  const [personalMessage, setPersonalMessage] = useState(user?.personalMessage || "")
-  const [isAnimated, setIsAnimated] = useState(user?.preferences?.isAnimated !== false)
-  const [enableWinks, setEnableWinks] = useState(user?.preferences?.enableWinks !== false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  
-  // CIPHER-X: Sync profile data with user data
-  useEffect(() => {
-    if (user) {
-      setDisplayName(user.displayName || user.username || "")
-      setStatus(user.status || "online")
-      setStatusMessage(user.statusMessage || "")
-      setPersonalMessage(user.personalMessage || "")
-      setIsAnimated(user.preferences?.isAnimated !== false)
-      setEnableWinks(user.preferences?.enableWinks !== false)
-    }
-  }, [user])
-  
-  /******************************************************************
-   * CIPHER-X: PROFILE DATA SYNCHRONIZATION PROTOCOL
-   * Collects form data and submits to API via auth context
-   * Handles success/error states and user feedback
-   ******************************************************************/
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    
-    try {
-      setSaving(true);
-      setError(null);
-      setSuccess(null);
-      
-      // Prepare updated profile data
-      const profileData: Partial<User> = {
-        displayName,
-        status,
-        statusMessage,
-        personalMessage,
-        preferences: {
-          ...(user.preferences || {}),
-          isAnimated,
-          enableWinks
-        }
-      };
-      
-      // Call the updateProfile method from auth context
-      const result = await updateProfile(profileData);
-      
-      if (result) {
-        setSuccess('✓ Profile updated successfully!');
-        // Success notification disappears after 3 seconds
-        setTimeout(() => setSuccess(null), 3000);
-      } else {
-        setError('Failed to update profile. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error saving profile:', err);
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const [displayName, setDisplayName] = useState("CoolUser2000")
+  const [status, setStatus] = useState("online")
+  const [statusMessage, setStatusMessage] = useState("Just chillin' like it's 2003")
+  const [personalMessage, setPersonalMessage] = useState("C.H.A.O.S. is the best chat app ever!")
+  const [isAnimated, setIsAnimated] = useState(true)
+  const [enableWinks, setEnableWinks] = useState(true)
 
   const statusOptions = [
     { value: "online", label: "Online" },
@@ -173,10 +103,7 @@ export function UserProfile() {
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Status</label>
-                    <Select 
-                  value={status} 
-                  onValueChange={(value) => setStatus(value as User['status'])}>
-                
+                    <Select value={status} onValueChange={setStatus}>
                       <SelectTrigger className="bg-white border-[#D4D0C8]">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -212,24 +139,11 @@ export function UserProfile() {
                     />
                   </div>
 
-                  <div className="flex justify-end mt-6">
-                    {error && <p className="text-red-500 text-sm mr-auto">{error}</p>}
-                    {success && <p className="text-green-500 text-sm mr-auto">{success}</p>}
-                    <Button 
-                      className="bg-[#316AC5] hover:bg-[#2A5BD7]"
-                      onClick={handleSaveProfile}
-                      disabled={saving}
-                    >
+                  <div className="pt-2">
+                    <Button className="bg-[#316AC5] hover:bg-[#2A5BD7]">
                       <Save className="w-4 h-4 mr-2" />
-                      {saving ? "Saving..." : "Save Changes"}
+                      Save Changes
                     </Button>
-                    
-                    {/******************************************************************
-                     * CIPHER-X: PROFILE SAVE HANDLER 
-                     * Processes profile updates and sends to backend
-                     * Confirms success or displays errors to user
-                     ******************************************************************/}
-                    
                   </div>
                 </div>
               </div>

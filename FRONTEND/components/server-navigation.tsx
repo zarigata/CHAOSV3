@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Home, Settings, Users, Bot, Hash } from "lucide-react"
-import { useAuth } from "./auth-provider"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -85,62 +83,32 @@ export function ServerNavigation({ serverId, onBack, onForward, canGoBack, canGo
   )
 }
 
-/******************************************************************
- * CIPHER-X: DYNAMIC SERVER DATA HANDLER
- * Fetches and manages server data from the backend API
- * Provides server information throughout the application
- ******************************************************************/
-function useServerData() {
-  const [serverData, setServerData] = useState<Record<string, {name: string, icon: string}>>({});
-  const [loading, setLoading] = useState(true);
-  const { token } = useAuth();
-  
-  useEffect(() => {
-    const fetchServers = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/servers`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch servers');
-        }
-        
-        const data = await response.json();
-        
-        // Create a lookup object by server ID
-        const serverMap: Record<string, {name: string, icon: string}> = {};
-        data.data.forEach((server: any) => {
-          serverMap[server._id] = {
-            name: server.name,
-            icon: server.icon || '🖥️' // Default icon if none provided
-          };
-        });
-        
-        setServerData(serverMap);
-      } catch (error) {
-        console.error('Error fetching server data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchServers();
-  }, [token]);
-  
-  return { serverData, loading };
-}
-
 function getServerName(serverId: string | null): string {
-  const { serverData } = useServerData();
-  if (!serverId) return "Unknown Server";
-  return serverData[serverId]?.name || "Unknown Server";
+  if (!serverId) return "Unknown Server"
+
+  const servers = {
+    server1: "Gaming Alliance",
+    server2: "Tech Enthusiasts",
+    server3: "Movie Buffs",
+    server4: "Music Lovers",
+    server5: "Book Club",
+    server6: "Fitness Friends",
+  }
+
+  return servers[serverId as keyof typeof servers] || "Unknown Server"
 }
 
 function getServerIcon(serverId: string | null): string {
-  const { serverData } = useServerData();
-  if (!serverId) return "?";
-  return serverData[serverId]?.icon || "?";
+  if (!serverId) return "?"
+
+  const icons = {
+    server1: "🎮",
+    server2: "💻",
+    server3: "🎬",
+    server4: "🎵",
+    server5: "📚",
+    server6: "💪",
+  }
+
+  return icons[serverId as keyof typeof icons] || "?"
 }

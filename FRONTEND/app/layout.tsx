@@ -1,26 +1,14 @@
-/******************************************************************
- * ╔════════════════════════════════════════════════════════════╗
- * ║      << C.H.A.O.S.V3 - CODEX >> APPLICATION LAYOUT         ║
- * ╠════════════════════════════════════════════════════════════╣
- * ║ Root layout configuration for the CHAOSV3 platform         ║
- * ║ Sets up global providers for auth, theming, and styling    ║
- * ╚════════════════════════════════════════════════════════════╝
- ******************************************************************/
-
 import type React from "react"
 import { Inter } from "next/font/google"
 import "./globals.css"
-
-// OMEGA-MATRIX: Import client-side providers wrapper
-import { Providers } from "../components/providers"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
-// CIPHER-X: Application metadata configuration
 export const metadata = {
-  title: "C.H.A.O.S.V3 - Communication Hub for Animated Online Socializing",
-  description: "A cross-platform MSN-inspired chat platform with modern features",
-  generator: 'CHAOSV3 Team'
+  title: "C.H.A.O.S. - Communication Hub for Animated Online Socializing",
+  description: "A nostalgic messaging platform inspired by MSN Messenger and Discord",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -28,14 +16,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // OMEGA-MATRIX: Application shell with global providers
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {/* CIPHER-X: Using a single Providers component to avoid client/server component confusion */}
-        <Providers>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           {children}
-        </Providers>
+        </ThemeProvider>
       </body>
     </html>
   )
