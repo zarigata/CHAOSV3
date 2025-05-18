@@ -1,0 +1,203 @@
+// ==========================================================
+// ⚡ C.H.A.O.S DATABASE SCHEMA ⚡
+// ==========================================================
+// - DATABASE MODELS FOR MSN-INSPIRED CHAT APPLICATION
+// - HANDLES USERS, MESSAGES, CHANNELS, HUBS, PRESENCE
+// - BUILT FOR SCALABILITY AND SECURITY
+// ==========================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================================
+// 👤 USER MODEL - CENTRAL ENTITY
+// ==========================================================
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  displayName   String?
+  avatarUrl     String?
+  statusMessage String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // ⚡ ENUM FIELD FOR USER STATUS
+  status        UserStatus @default(OFFLINE)
+
+  // ⚡ RELATIONS - DEFINE CONNECTIONS BETWEEN ENTITIES
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  memberships      HubMember[]
+  contacts         Contact[]       @relation("UserContacts")
+  contactOf        Contact[]       @relation("ContactOf")
+  sessions         UserSession[]
+}
+
+// ==========================================================
+// 🔑 USER SESSION - HANDLE AUTH TOKENS & PRESENCE
+// ==========================================================
+model UserSession {
+  id            String    @id @default(uuid())
+  userId        String
+  refreshToken  String
+  expiresAt     DateTime
+  lastActiveAt  DateTime  @default(now())
+  userAgent     String?
+  ipAddress     String?
+
+  // ⚡ RELATIONS - MAP TO USER
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// ==========================================================
+// 📝 MESSAGE MODEL - STORE ALL COMMUNICATIONS
+// ==========================================================
+model Message {
+  id            String    @id @default(uuid())
+  content       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // ⚡ RELATIONS - SENDER AND RECEIVER
+  senderId      String
+  sender        User      @relation("SentMessages", fields: [senderId], references: [id])
+
+  // ⚡ OPTIONAL RECIPIENT (DIRECT MESSAGE)
+  recipientId   String?
+  recipient     User?     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+
+  // ⚡ OPTIONAL CHANNEL (GROUP MESSAGE)
+  channelId     String?
+  channel       Channel?  @relation(fields: [channelId], references: [id])
+  
+  // ⚡ MESSAGE TYPE AND STATUS
+  type          MessageType @default(TEXT)
+  isEncrypted   Boolean  @default(false)
+  isEdited      Boolean  @default(false)
+  isDeleted     Boolean  @default(false)
+  
+  // ⚡ OPTIONAL REPLY REFERENCE
+  replyToId     String?
+  replyTo       Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies       Message[] @relation("MessageReplies")
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([channelId])
+}
+
+// ==========================================================
+// 👥 CONTACT MODEL - MSN-STYLE FRIEND CONNECTIONS
+// ==========================================================
+model Contact {
+  id            String    @id @default(uuid())
+  userId        String
+  contactId     String
+  nickname      String?
+  createdAt     DateTime  @default(now())
+  groupName     String?   @default("Friends")
+  
+  // ⚡ RELATIONS - USER CONNECTIONS
+  user          User      @relation("UserContacts", fields: [userId], references: [id])
+  contact       User      @relation("ContactOf", fields: [contactId], references: [id])
+  
+  @@unique([userId, contactId])
+  @@index([userId])
+  @@index([contactId])
+}
+
+// ==========================================================
+// 🏠 HUB MODEL - DISCORD-STYLE SERVERS
+// ==========================================================
+model Hub {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  iconUrl       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  ownerId       String
+  
+  // ⚡ RELATIONS - CHANNELS AND MEMBERS
+  channels      Channel[]
+  members       HubMember[]
+  
+  @@index([ownerId])
+}
+
+// ==========================================================
+// 📢 CHANNEL MODEL - COMMUNICATION THREADS WITHIN HUBS
+// ==========================================================
+model Channel {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isPrivate     Boolean   @default(false)
+  
+  // ⚡ RELATIONS - PARENT HUB AND MESSAGES 
+  hubId         String
+  hub           Hub       @relation(fields: [hubId], references: [id])
+  messages      Message[]
+  
+  @@unique([hubId, name])
+  @@index([hubId])
+}
+
+// ==========================================================
+// 🧑‍💼 HUB MEMBER - USER MEMBERSHIPS WITH ROLES
+// ==========================================================
+model HubMember {
+  id            String    @id @default(uuid())
+  hubId         String
+  userId        String
+  role          MemberRole @default(MEMBER)
+  nickname      String?
+  joinedAt      DateTime  @default(now())
+  
+  // ⚡ RELATIONS - USER AND HUB
+  hub           Hub       @relation(fields: [hubId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@unique([hubId, userId])
+  @@index([hubId])
+  @@index([userId])
+}
+
+// ==========================================================
+// 📊 ENUMS - TYPE DEFINITIONS FOR DATABASE
+// ==========================================================
+enum UserStatus {
+  ONLINE
+  AWAY
+  BUSY
+  INVISIBLE
+  OFFLINE
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+  AUDIO
+  VIDEO
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}

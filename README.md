@@ -1,65 +1,73 @@
-# C.H.A.O.S - Community Hub for Audio-Oriented Socialization
+# C.H.A.O.S. (Communication Hub for Animated Online Socializing)
 
+<p align="center">
+  <img src="./assets/logo.png" alt="C.H.A.O.S. Logo" width="200" />
+  <br>
+  <em>Bringing back the nostalgia of MSN Messenger with modern capabilities</em>
+</p>
+
+## 🌟 Overview
+
+C.H.A.O.S. is a modern communication platform that combines the nostalgic charm of MSN Messenger with Discord's powerful community features. Our platform delivers:
+
+- **Real-time messaging** with typing indicators and read receipts
+- **Community hubs** with channels (like Discord servers)
+- **Encrypted DMs** for privacy-focused communication
+- **Status updates** (online, away, offline) with custom messages
+- **Modern UI** with nostalgic MSN-inspired themes
+- **Cross-platform** support via web and native desktop apps
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm/pnpm
+- PostgreSQL 14+
+- Redis (for presence detection and caching)
+
+### Development Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/chaos.git
+cd chaos
+
+# Install dependencies
+pnpm install
+
+# Start development services
+pnpm dev
 ```
-   ______  __  __     ___      ______   ______
-  / ____/ / / / /    /   |    / ____/  / ____/
- / /     / /_/ /    / /| |   / /      / /     
-/ /___  / __  /    / ___ |  / /___   / /___   
-\____/ /_/ /_/    /_/  |_|  \____/   \____/   
-                                              
+
+## 🏗️ Architecture
+
+C.H.A.O.S. is built as a monorepo with:
+
+- **Frontend**: React, TypeScript, TailwindCSS, Shadcn/UI
+- **Backend**: Node.js with Fastify, WebSockets, PostgreSQL, Redis
+- **Native App**: Tauri (lightweight alternative to Electron)
+- **Shared**: Common types and utilities
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run frontend tests
+pnpm test:frontend
+
+# Run backend tests
+pnpm test:backend
+
+# Run e2e tests
+pnpm test:e2e
 ```
 
-## Overview
+## 📝 License
 
-C.H.A.O.S is a cross-platform voice communication application designed for community building and real-time audio interaction. Built with security, scalability, and user experience in mind, C.H.A.O.S aims to provide a seamless voice messaging platform that works flawlessly on both Windows and Linux systems.
+[MIT License](./LICENSE)
 
-## Features
+## 🙏 Acknowledgements
 
-- **Real-time Voice Communication**: Low-latency audio streaming for seamless conversations
-- **Community Building**: Create and join voice communities based on shared interests
-- **Cross-Platform Compatibility**: Native applications for both Windows and Linux
-- **Enhanced Security**: End-to-end encryption for all voice communications
-- **Modern UI/UX**: Intuitive interface designed for optimal user experience
-- **Extensible Architecture**: Modular design allows for easy feature additions
-- **AI-Enhanced Features**: Smart voice recognition and processing capabilities
-
-## System Requirements
-
-### Client Application
-- **Windows**: Windows 10 or later
-- **Linux**: Most major distributions with kernel 5.0+
-- **RAM**: 4GB minimum, 8GB recommended
-- **Storage**: 500MB free space
-- **Network**: Broadband internet connection
-
-### Server (Self-hosting)
-- **CPU**: 4+ cores recommended
-- **RAM**: 8GB minimum, 16GB recommended
-- **Storage**: 20GB+ SSD recommended
-- **Network**: Stable connection with 10Mbps+ upload speed
-
-## Getting Started
-
-See [STEPS.md](./STEPS.md) for detailed installation and setup instructions.
-
-## Project Structure
-
-For detailed information about the project architecture and organization, see [PROJECT.md](./PROJECT.md).
-
-## Contributing
-
-We welcome contributions from the community! Please read our contributing guidelines before submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For questions, support, or feedback, reach out to us at:
-- Project Repository: [GitHub](https://github.com/yourusername/CHAOSV3)
-- Email: your.email@example.com
-
----
-
-© 2025 C.H.A.O.S Project Team. All Rights Reserved.
+Inspired by the golden days of MSN Messenger and the community-building capabilities of Discord.

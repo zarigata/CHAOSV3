@@ -1,0 +1,30 @@
+{
+  "name": "chaos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Communication Hub for Animated Online Socializing",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "Frontend",
+    "Backend",
+    "Shared"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.6.5",
+    "@commitlint/config-conventional": "^17.6.5",
+    "eslint": "^8.42.0",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.8",
+    "turbo": "^1.10.0"
+  }
+}
