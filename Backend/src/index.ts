@@ -24,6 +24,8 @@ import dotenv from 'dotenv';
 import { setupRoutes } from './routes';
 import { setupWebSockets } from './services/websocket';
 import { connectRedis } from './services/redis';
+import { initializeEmailService } from './services/email';
+import { setupRateLimits } from './middleware/rate-limit';
 import { errorHandler } from './utils/errorHandler';
 import { logger } from './utils/logger';
 
@@ -54,7 +56,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
 
   // ==========================================================
-  // 🔒 REGISTER PLUGINS AND MIDDLEWARE
+  // 🔐 REGISTER PLUGINS AND MIDDLEWARE
   // ==========================================================
   
   // CORS for cross-origin requests
@@ -67,27 +69,42 @@ const buildServer = async (): Promise<FastifyInstance> => {
   await server.register(fastifyJwt, {
     secret: JWT_SECRET,
   });
+  
+  // Rate limiting protection
+  await setupRateLimits(server);
 
   // Swagger API documentation
-  await server.register(fastifySwagger, {
-    routePrefix: '/docs',
-    swagger: {
-      info: {
-        title: 'C.H.A.O.S API Documentation',
-        description: 'API documentation for Communication Hub for Animated Online Socializing',
-        version: '0.1.0',
+  if (process.env.ENABLE_SWAGGER === 'true') {
+    await server.register(fastifySwagger, {
+      routePrefix: '/docs',
+      // @ts-ignore - Type issues with swagger options
+      swagger: {
+        info: {
+          title: 'C.H.A.O.S API Documentation',
+          description: 'Communication Hub for Animated Online Socializing',
+          version: '0.1.0',
+        },
+        externalDocs: {
+          url: 'https://github.com/fastify/fastify-swagger',
+          description: 'Find more info here',
+        },
+        host: `localhost:${PORT}`,
+        schemes: ['http'],
+        consumes: ['application/json'],
+        produces: ['application/json'],
+        securityDefinitions: {
+          bearerAuth: {
+            type: 'apiKey',
+            name: 'Authorization',
+            in: 'header'
+          }
+        }
       },
-      externalDocs: {
-        url: 'https://swagger.io',
-        description: 'Find more info here',
-      },
-      host: 'localhost',
-      schemes: ['http'],
-      consumes: ['application/json'],
-      produces: ['application/json'],
-    },
-    exposeRoute: true,
-  });
+      exposeRoute: true,
+    });
+    
+    logger.info(`📚 API Documentation available at http://localhost:${PORT}/docs`);
+  }
 
   // ==========================================================
   // 🛣️ REGISTER API ROUTES
@@ -125,15 +142,33 @@ const buildServer = async (): Promise<FastifyInstance> => {
 // ==========================================================
 const startServer = async () => {
   try {
+    // [CODEX-1337] Initialize required services
+    logger.info('Initializing C.H.A.O.S. backend services...');
+    
     // Connect to Redis for caching and presence
     await connectRedis();
+    logger.info('🔥 Redis service connected successfully');
+    
+    // Initialize email service for notifications
+    initializeEmailService();
+    logger.info('📧 Email service initialized successfully');
     
     // Build and start the server
     const server = await buildServer();
     await server.listen({ port: Number(PORT), host: '0.0.0.0' });
     
+    // [CODEX-1337] Display ASCII art on server start
+    console.log(`
+    ██████╗    ██╗  ██╗    █████╗     ██████╗     ███████╗
+    ██╔════╝    ██║  ██║   ██╔══██╗   ██╔═══██╗   ██╔════╝
+    ██║         ███████║   ███████║   ██║   ██║   ███████╗
+    ██║         ██╔══██║   ██╔══██║   ██║   ██║   ╚════██║
+    ╚██████╗   ██║  ██║   ██║  ██║   ██████╔╝    ███████║
+     ╚═════╝   ╚═╝  ╚═╝   ╚═╝  ╚═╝   ╚═════╝     ╚══════╝
+     `); 
+    
     logger.info(`🚀 Server started successfully on port ${PORT}`);
-    logger.info(`📚 Documentation available at http://localhost:${PORT}/docs`);
+    logger.info(`👨‍💻 Environment: ${process.env.NODE_ENV}`);
   } catch (err) {
     logger.error('Failed to start server:');
     logger.error(err);

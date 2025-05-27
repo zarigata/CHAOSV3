@@ -39,6 +39,7 @@ model User {
   contacts         Contact[]       @relation("UserContacts")
   contactOf        Contact[]       @relation("ContactOf")
   sessions         UserSession[]
+  passwordResets   PasswordReset[]
 }
 
 // ==========================================================
@@ -57,6 +58,24 @@ model UserSession {
   user          User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+// ==========================================================
+// 🔑 PASSWORD RESET - SECURE RECOVERY SYSTEM
+// ==========================================================
+model PasswordReset {
+  id            String    @id @default(uuid())
+  userId        String
+  token         String    @unique
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  used          Boolean   @default(false)
+  
+  // ⚡ RELATION - MAP TO USER
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([token])
 }
 
 // ==========================================================

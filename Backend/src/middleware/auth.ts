@@ -9,8 +9,36 @@
 // [CODEX-1337] ROLE-BASED ACCESS CONTROL MECHANISMS
 // [CODEX-1337] SECURITY HARDENING AND ATTACK PREVENTION
 // ==========================================================
+// 🔐 RATE LIMITING - PROTECT API FROM ABUSE
+// ==========================================================
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import '@fastify/jwt';
+import rateLimit from '@fastify/rate-limit';
+
+// [CODEX-1337] Type declarations for Fastify JWT extensions
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    payload: { 
+      userId: string;
+      [key: string]: any;
+    };
+    user: {
+      userId: string;
+      status?: string;
+      role?: string;
+      [key: string]: any;
+    };
+  }
+}
+
+// [CODEX-1337] Add custom decorators to FastifyInstance
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    authorize: (requiredRoles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+  }
+}
 import fp from 'fastify-plugin';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
@@ -77,12 +105,23 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
         const userId = request.user.userId;
         
         // Get user with roles from database
+        const params = request.params as { hubId?: string };
+        const hubId = params.hubId;
+        
+        if (!hubId) {
+          logger.warn({ userId }, 'Authorization failed: Missing hubId parameter');
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'Missing required parameter: hubId'
+          });
+        }
+        
         const user = await prisma.user.findUnique({
           where: { id: userId },
           include: {
             memberships: {
               where: {
-                hubId: request.params.hubId as string,
+                hubId,
               },
               select: {
                 role: true,
